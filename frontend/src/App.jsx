@@ -149,7 +149,7 @@ export default function App() {
       {/* Fondo con videos superpuesto */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <video autoPlay loop muted playsInline className="w-full h-full object-cover opacity-30">
-          <source src="/videos/background1.mp4" type="video/mp4" />
+          <source src=".\assets\VideosFondo\pez.mp4" type="video/mp4" />
         </video>
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
       </div>
@@ -170,7 +170,7 @@ export default function App() {
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Ejemplo: 'Escena cyberpunk, cámara lenta, atardecer, correr'"
+                placeholder="Ejemplo: 'Coloca unos lentes de sol, cámara lenta al atardecer, correr'"
                 className="w-full rounded-lg p-4 text-black resize-none min-h-[160px]"
               />
               <div className="mt-3 flex items-center gap-3">
@@ -180,16 +180,16 @@ export default function App() {
                 {/* Botones*/}
                 <label className="relative inline-flex items-center justify-center cursor-pointer">
                   <input type="file" accept="image/*" onChange={handleFileChange} className="sr-only" />
-                  <span className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-white/6 hover:bg-white/10">
+                  <span className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-white/6 hover:bg-white/10" title='Subir archivo'>
                     <img src={subir} alt="Subir archivo" className="w-8 h-8" />
                   </span>
                 </label>
 
-                <button onClick={openCamera} className="w-15 h-15 inline-flex items-center justify-center rounded-full bg-white/6 hover:bg-white/10">
+                <button onClick={openCamera} className="w-15 h-15 inline-flex items-center justify-center rounded-full bg-white/6 hover:bg-white/10" title="Abrir cámara">
                   <img src={cam} alt="Abrir cámara" className="w-8 h-8" />
                 </button>
 
-                <button onClick={toggleListening} className={`w-15 h-15 inline-flex items-center justify-center rounded-full ${listening ? 'bg-red-600' : 'bg-white/6'} hover:opacity-90`} title={listening ? 'Detener escucha' : 'Usar micrófono'}>
+                <button onClick={toggleListening} className={`w-15 h-15 inline-flex items-center justify-center rounded-full ${listening ? 'bg-red-600' : 'bg-white/6'} hover:opacity-90`} title={listening ? 'Detener microfono' : 'Usar micrófono'}>
                   <img src={mic} alt="Micrófono" className="w-8 h-8" />
                 </button>
 
@@ -204,7 +204,7 @@ export default function App() {
               )}
             </div>
 
-            {/* Columna derecha: preview y contador/simple info */}
+            {/* Columna derecha: preview*/}
             <aside className="space-y-4">
               <div className="bg-white/6 rounded-lg p-3 text-center">
                 <p className="text-sm text-gray-300 mb-1">Previsualización</p>
