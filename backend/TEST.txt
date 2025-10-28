@@ -1,0 +1,3 @@
+API KEY = AIzaSyCGgMcF0KhPfDKllrAlM6_XlggoXDpCozM
+RUTA = C:\Users\Desarrollador\Downloads\chava.png
+Promt = Haz que els ujeto de la imagen le salgan arañas por la boca
