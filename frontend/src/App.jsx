@@ -146,15 +146,41 @@ useEffect(() => {
     }
   }
 
-  const handleSubmit = async () => {
+const handleSubmit = async () => {
+  try {
     const form = new FormData()
     form.append('prompt', prompt)
-    if (selectedFile) form.append('image', selectedFile)
-    if (capturedBlob) form.append('image', new File([capturedBlob], 'selfie.jpg', { type: 'image/jpeg' }))
+    if (capturedBlob) {
+      form.append('image', new File([capturedBlob], 'selfie.jpg', { type: 'image/jpeg' }))
+    } else if (selectedFile) {
+      form.append('image', selectedFile)
+    } else {
+      alert("Debes subir o tomar una foto antes de enviar.")
+      return
+    }
 
-    console.log('Enviar payload:', { prompt, file: selectedFile || capturedBlob })
-    alert('Simulación: prompt y archivo preparados. Revisa la consola para ver el FormData.')
+    console.log('➡️ Enviando al backend:', { prompt, file: capturedBlob || selectedFile })
+
+    const res = await fetch('http://127.0.0.1:8000/api/generate-video', {
+      method: 'POST',
+      body: form,
+    })
+
+    if (!res.ok) {
+      const err = await res.json()
+      throw new Error("Error en backend: " + JSON.stringify(err))
+    }
+
+    const data = await res.json()
+    console.log('✅ Respuesta backend:', data)
+    alert("Video generado correctamente (simulado)")
+  } catch (err) {
+    console.error('❌ Error en handleSubmit:', err)
+    alert("Error al enviar datos al backend. Revisa la consola.")
   }
+}
+
+
 
   return (
     <div className="min-h-screen relative bg-gradient-to-b from-gray-900 via-black to-gray-800 text-white flex items-center justify-center px-4">

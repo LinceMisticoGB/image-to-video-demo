@@ -1,31 +1,51 @@
-# server.py
-from fastapi import FastAPI, UploadFile, Form, HTTPException
+from fastapi import FastAPI, File, UploadFile, Form
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import shutil, os
-import main  # tu main.py
+import main  # Importamos nuestra lógica principal
 
-app = FastAPI()
-os.makedirs("uploads", exist_ok=True)
-os.makedirs("videos", exist_ok=True)
+app = FastAPI(title="IA Imagen a Video Demo")
 
-@app.get("/")
-def root():
-    return {"message": "Backend activo y funcionando 🚀"}
+# ===============================
+# CORS: permitir requests desde React (vite)
+# ===============================
+origins = [
+    "http://localhost:5173",  # tu frontend dev
+    "http://127.0.0.1:5173"
+]
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ===============================
+# Ruta principal: generar video
+# ===============================
 @app.post("/api/generate-video")
-async def api_generate_video(prompt: str = Form(...), file: UploadFile = None):
-    if file is None:
-        raise HTTPException(status_code=400, detail="Se requiere un archivo de imagen.")
-
-    # Guardar imagen temporalmente
-    temp_path = os.path.join("uploads", file.filename)
-    with open(temp_path, "wb") as f:
-        shutil.copyfileobj(file.file, f)
-
+async def generate_video(prompt: str = Form(...), file: UploadFile = File(...)):
+    """
+    Recibe prompt y archivo desde React
+    - prompt: texto descriptivo
+    - file: imagen a procesar
+    Retorna: JSON con URL del video generado
+    """
     try:
-        # Procesar imagen + prompt usando main.py
-        video_url = main.process_image_to_video(temp_path, prompt)
+        # Convertir UploadFile a bytes
+        image_bytes = await file.read()
 
-        return JSONResponse(content={"video_url": video_url})
+        # Llamar a main.py para procesar
+        video_url = main.process_image_to_video(image_bytes, prompt)
+
+        return JSONResponse({"video_url": video_url})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return JSONResponse({"detail": str(e)}, status_code=500)
+
+# ===============================
+# Health check
+# ===============================
+@app.get("/api/health")
+def health():
+    return {"status": "ok"}

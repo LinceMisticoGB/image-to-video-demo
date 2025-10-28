@@ -1,4 +1,8 @@
 API KEY google = AIzaSyCGgMcF0KhPfDKllrAlM6_XlggoXDpCozM
-runway = key_48447e5c483200b1dc08a8fdf4941b72ea4cfa1b76d50c4531026eac8534731f8932458afe67d2db41da46393c1016edc0eea417f3dedfdade358744243f6006
+
 RUTA = C:\Users\Desarrollador\Downloads\chava.png
 Promt = Haz que els ujeto de la imagen le salgan arañas por la boca
+
+IMGBB_API_KEY = "9b6a38f74e50702889c4afd2704f325f"
+RUNWAY_API_URL = "https://api.runwayml.com/v1/video-generation"
+RUNWAY_API_KEY = "key_48447e5c483200b1dc08a8fdf4941b72ea4cfa1b76d50c4531026eac8534731f8932458afe67d2db41da46393c1016edc0eea417f3dedfdade358744243f6006"
