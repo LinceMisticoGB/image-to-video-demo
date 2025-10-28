@@ -1,9 +1,8 @@
-
-// tailwind.config.js
-export default {
+/** @type {import('tailwindcss').Config} */
+module.exports = {
   content: [
     "./index.html",
-    "./src/**/*.{js,jsx,ts,tsx,vue}", // incluye todas las extensiones que uses
+    "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {},
