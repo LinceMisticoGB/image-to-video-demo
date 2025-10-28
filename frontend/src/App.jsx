@@ -170,10 +170,11 @@ export default function App() {
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Ej: 'Escena cyberpunk, cámara lenta, atardecer, correr'"
+                placeholder="Ejemplo: 'Escena cyberpunk, cámara lenta, atardecer, correr'"
                 className="w-full rounded-lg p-4 text-black resize-none min-h-[160px]"
               />
               <div className="mt-3 flex items-center gap-3">
+
 
 
                 {/* Botones*/}
