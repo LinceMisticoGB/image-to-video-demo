@@ -217,8 +217,6 @@ useEffect(() => {
               />
               <div className="mt-3 flex items-center gap-3">
 
-
-
                 {/* Botones*/}
                 <label className="relative inline-flex items-center justify-center cursor-pointer">
                   <input type="file" accept="image/*" onChange={handleFileChange} className="sr-only" />
