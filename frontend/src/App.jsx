@@ -3,6 +3,9 @@ import env from './assets/env.png'
 import mic from './assets/mic.png'
 import cam from './assets/cam.png'
 import subir from './assets/subir.png'
+import videoplayback from './assets/VideosFondo/videoplayback.mp4'
+import pez from './assets/VideosFondo/pez.mp4'
+import astron from './assets/VideosFondo/astron.mp4'
 
 export default function App() {
   const [prompt, setPrompt] = useState('')
@@ -15,6 +18,15 @@ export default function App() {
   const canvasRef = useRef(null)
   const streamRef = useRef(null)
   const recognitionRef = useRef(null)
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const videos = [videoplayback, pez, astron] // tres videos en el carrusel
+
+useEffect(() => {
+  const interval = setInterval(() => {
+    setCurrentIndex((prev) => (prev + 1) % videos.length)
+  }, 6000) // cambia cada 6 segundos
+  return () => clearInterval(interval)
+}, [videos.length])
 
   useEffect(() => {
     if (!cameraActive) return
@@ -156,9 +168,39 @@ export default function App() {
 
       <div className="w-full h-full min-h-screen mx-auto p-4 lg:p-8 flex flex-col">
 
-        <header className="text-center mb-6">
-          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight drop-shadow-xl">IA IMAGEN A VIDEO - DEMO</h1>
-        </header>
+<header className="text-center mb-6">
+  <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight drop-shadow-xl">
+    IA IMAGEN A VIDEO - DEMO
+  </h1>
+</header>
+
+{/* 🎞️ Carrusel decorativo de videos */}
+<section className="relative flex justify-center mb-8 px-4 z-10">
+  <div className="w-full max-w-3xl rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-black/40">
+    <div className="relative w-full h-[100px] md:h-[200px] overflow-hidden rounded-2xl">
+      {/** Contenedor de videos */}
+      <div
+        className="flex transition-transform duration-[1500ms] ease-in-out"
+        style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+      >
+        {[videoplayback, pez, astron].map((vid, i) => (
+          <video
+            key={i}
+            src={vid}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full flex-shrink-0 object-contain h-[100px] md:h-[200px]"
+          />
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
 
           <main className="w-full bg-white/5 backdrop-blur-md rounded-2xl p-4 lg:p-6 shadow-2xl border border-white/6">
           <p className="text-center text-gray-300 mb-5">Sube una imagen o toma una selfie para comenzar</p>
