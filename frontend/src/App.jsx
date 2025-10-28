@@ -190,14 +190,8 @@ export default function App() {
               </div>
             )}
 
-            {capturedBlob && (
-              <div>
-                <p className="mb-2">Selfie capturada:</p>
-                <img src={URL.createObjectURL(capturedBlob)} alt="selfie" className="mx-auto rounded-md max-h-48" />
-              </div>
-
-              <div className="text-xs text-gray-400">Tip: Usa el micrófono para dictar el prompt. El botón se pondrá rojo cuando esté escuchando.</div>
-            </aside>
+            
+             
           </div>
 
         </div>
