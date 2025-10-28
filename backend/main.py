@@ -65,7 +65,7 @@ def generar_video(prompt: str, url_imagen: str):
             model='gen4_turbo', 
             prompt_image=url_imagen,
             prompt_text=prompt,
-            # 💡 CORRECCIÓN: Usamos la dimensión exacta para 16:9
+            #Usamos la dimensión exacta para 16:9
             ratio='1280:720', 
             duration=4.0, 
         )
