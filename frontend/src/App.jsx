@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react'
 import env from './assets/env.png'
 import mic from './assets/mic.png'
 import cam from './assets/cam.png'
+import subir from './assets/subir.png'
 
 export default function App() {
   const [prompt, setPrompt] = useState('')
@@ -173,33 +174,32 @@ export default function App() {
                 className="w-full rounded-lg p-4 text-black resize-none min-h-[160px]"
               />
               <div className="mt-3 flex items-center gap-3">
-                {/* Botón subir imagen - archivo oculto */}
+
+
+                {/* Botones*/}
                 <label className="relative inline-flex items-center justify-center cursor-pointer">
                   <input type="file" accept="image/*" onChange={handleFileChange} className="sr-only" />
                   <span className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-white/6 hover:bg-white/10">
-                    <img src={env} alt="Subir archivo" className="w-6 h-6" />
+                    <img src={subir} alt="Subir archivo" className="w-8 h-8" />
                   </span>
                 </label>
 
-                {/* Tomar foto - abre cámara modal */}
-                <button onClick={openCamera} className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-white/6 hover:bg-white/10">
-                  <img src={cam} alt="Abrir cámara" className="w-6 h-6" />
+                <button onClick={openCamera} className="w-15 h-15 inline-flex items-center justify-center rounded-full bg-white/6 hover:bg-white/10">
+                  <img src={cam} alt="Abrir cámara" className="w-8 h-8" />
                 </button>
 
-                {/* Microfono - iniciar/stop */}
-                <button onClick={toggleListening} className={`w-12 h-12 inline-flex items-center justify-center rounded-full ${listening ? 'bg-red-600' : 'bg-white/6'} hover:opacity-90`} title={listening ? 'Detener escucha' : 'Usar micrófono'}>
-                  <img src={mic} alt="Micrófono" className="w-6 h-6" />
+                <button onClick={toggleListening} className={`w-15 h-15 inline-flex items-center justify-center rounded-full ${listening ? 'bg-red-600' : 'bg-white/6'} hover:opacity-90`} title={listening ? 'Detener escucha' : 'Usar micrófono'}>
+                  <img src={mic} alt="Micrófono" className="w-8 h-8" />
                 </button>
 
-                {/* Enviar prompt - icono flecha */}
-                <button onClick={handleSubmit} className="ml-auto w-12 h-12 inline-flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700" title="Enviar prompt">
-                  <img src={env} alt="Enviar" className="w-6 h-6" />
+                <button onClick={handleSubmit} className="ml-auto w-15 h-15 inline-flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700" title="Enviar prompt">
+                  <img src={env} alt="Enviar" className="w-8 h-8" />
                 </button>
               </div>
 
-              {/* Transcripción interina */}
+              {/* Transcripción */}
               {interimTranscript && (
-                <p className="mt-2 text-sm text-yellow-300">{interimTranscript}</p>
+                <p className="mt-2 text-sm text-red-300">{interimTranscript}</p>
               )}
             </div>
 
@@ -244,7 +244,7 @@ export default function App() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <video ref={videoRef} autoPlay playsInline className="w-full rounded-md bg-black h-64 object-cover" />
                 <div className="flex flex-col gap-3">
-                  <p className="text-sm text-gray-700">Alinea tu rostro y presiona Capturar</p>
+                  <p className="text-sm text-gray-700">Cuando estes listo presionar capturar</p>
                   <div className="mt-auto flex gap-2">
                     <button onClick={capturePhoto} className="flex-1 px-4 py-2 rounded-md bg-blue-600 text-white">Capturar</button>
                     <button onClick={() => { setCameraActive(false); if (streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null; } }} className="px-4 py-2 rounded-md bg-gray-200">Cancelar</button>
