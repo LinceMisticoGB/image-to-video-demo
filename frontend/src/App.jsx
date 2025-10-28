@@ -1,61 +1,14 @@
 import React, { useRef, useState, useEffect } from 'react'
-
 export default function App() {
   const [prompt, setPrompt] = useState('')
   const [selectedFile, setSelectedFile] = useState(null)
   const [capturedBlob, setCapturedBlob] = useState(null)
   const [cameraActive, setCameraActive] = useState(false)
-  const [listening, setListening] = useState(false)
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
   const streamRef = useRef(null)
-  const recognitionRef = useRef(null)
 
-  // 🎤 Iniciar o detener reconocimiento de voz
-  const toggleListening = () => {
-    if (listening) {
-      // detener
-      if (recognitionRef.current) recognitionRef.current.stop()
-      setListening(false)
-      return
-    }
-
-    if (!('webkitSpeechRecognition' in window)) {
-      alert('Tu navegador no soporta reconocimiento de voz. Usa Chrome o Edge.')
-      return
-    }
-
-    const recognition = new window.webkitSpeechRecognition()
-    recognition.lang = 'es-MX'
-    recognition.continuous = true
-    recognition.interimResults = true
-
-    recognition.onresult = (event) => {
-      let finalTranscript = ''
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript + ' '
-        }
-      }
-      if (finalTranscript) {
-        setPrompt((prev) => prev + finalTranscript)
-      }
-    }
-
-    recognition.onerror = (e) => {
-      console.error('Error de reconocimiento:', e)
-      setListening(false)
-    }
-
-    recognition.onend = () => setListening(false)
-
-    recognition.start()
-    recognitionRef.current = recognition
-    setListening(true)
-  }
-
-  // 📸 Iniciar cámara cuando se active el modo "tomar foto"
+  // Iniciar cámara cuando se active el modo "tomar foto"
   useEffect(() => {
     if (!cameraActive) return
     const start = async () => {
@@ -114,6 +67,66 @@ export default function App() {
     }, 'image/jpeg')
   }
 
+  // Speech-to-text con Web Speech API
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (!SpeechRecognition) {
+      recognitionRef.current = null
+      return
+    }
+
+    const rec = new SpeechRecognition()
+    rec.continuous = true
+    rec.interimResults = true
+    rec.lang = 'es-MX'
+
+    rec.onresult = (event) => {
+      let interim = ''
+      let final = ''
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        const transcript = event.results[i][0].transcript
+        if (event.results[i].isFinal) final += transcript
+        else interim += transcript
+      }
+      if (final) setPrompt((p) => (p ? p + ' ' + final : final))
+      setInterimTranscript(interim)
+    }
+
+    rec.onerror = (e) => {
+      console.error('Speech recognition error', e)
+    }
+
+    recognitionRef.current = rec
+    return () => {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop() } catch (e) {}
+        recognitionRef.current = null
+      }
+    }
+  }, [])
+
+  const toggleListening = () => {
+    const rec = recognitionRef.current
+    if (!rec) {
+      alert('Tu navegador no soporta SpeechRecognition (Web Speech API). Usa Chrome o Edge.')
+      return
+    }
+    if (!listening) {
+      try {
+        rec.start()
+        setListening(true)
+      } catch (e) {
+        console.warn('No se pudo iniciar reconocimiento:', e)
+      }
+    } else {
+      try {
+        rec.stop()
+      } catch (e) {}
+      setListening(false)
+      setInterimTranscript('')
+    }
+  }
+
   const handleSubmit = async () => {
     const form = new FormData()
     form.append('prompt', prompt)
@@ -121,101 +134,75 @@ export default function App() {
     if (capturedBlob)
       form.append('image', new File([capturedBlob], 'selfie.jpg', { type: 'image/jpeg' }))
 
+    // Ejemplo: mostrar en consola los datos que enviarías
     console.log('Enviando prompt y archivo:', { prompt, file: selectedFile || capturedBlob })
+
+    // Simular envío
     alert('Simulación: prompt enviado. Revisa la consola para ver el FormData.')
   }
 
   return (
     <div className="min-h-screen relative bg-gray-900 text-white flex items-center justify-center">
-      {/* Fondo animado */}
+      {/* VIDEOS DE FONDO - reemplaza src por tus archivos de video */}
       <div className="absolute inset-0 overflow-hidden -z-10">
         <video autoPlay loop muted playsInline className="w-full h-full object-cover opacity-40">
           <source src="/videos/background1.mp4" type="video/mp4" />
         </video>
-        <video autoPlay loop muted playsInline className="w-full h-full object-cover opacity-30 absolute top-0 left-0">
-          <source src="/videos/background2.mp4" type="video/mp4" />
-        </video>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
       </div>
 
       {/* Contenedor central */}
       <div className="w-full max-w-3xl mx-auto p-6 text-center">
-        <h1 className="text-3xl sm:text-5xl font-extrabold drop-shadow-lg">IA IMAGEN - VIDEO - DEMO</h1>
+        <h1 className="text-3xl sm:text-5xl font-extrabold drop-shadow-lg">IA IMAGEN A VIDEO - DEMO</h1>
 
-        <p className="mt-6 text-lg">Sube una imagen, toma una selfie o dicta tus instrucciones por voz</p>
+        <p className="mt-6 text-lg">Sube una imagen o toma una una selfie para comenzar</p>
 
-        <div className="mt-6 bg-white/10 backdrop-blur-md rounded-xl p-6 shadow-lg">
-          {/* Campo de texto + voz */}
+        <div className="mt-6 bg-white/8 backdrop-blur-md rounded-xl p-6 shadow-lg">
+          {/* Cuadro de texto para prompt */}
           <label className="block text-left mb-2 font-medium">Prompt</label>
-          <div className="relative">
-            <textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Describe lo que quieres que salga en el video..."
-              className="w-full rounded-md p-3 text-black resize-none h-28"
-            />
-            <button
-              onClick={toggleListening}
-              className={`absolute right-3 bottom-3 px-3 py-1.5 rounded-md text-sm font-semibold ${
-                listening
-                  ? 'bg-red-600 text-white animate-pulse'
-                  : 'bg-green-600 text-white hover:bg-green-700'
-              }`}
-            >
-              {listening ? '⏹️ Detener' : '🎤 Hablar'}
-            </button>
-          </div>
+          <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="Describe lo que quieres que salga en el video (ej: 'estilo cinematográfico, amanecer, cámara lenta')"
+            className="w-full rounded-md p-3 text-black resize-none h-28"
+          />
 
-          {/* Botones subir/tomar/enviar */}
+          {/* Botones para subir / tomar foto / enviar */}
           <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex-1 flex gap-3 justify-center">
+            <div className="flex-1 flex gap-3">
               <label className="inline-flex items-center gap-2 cursor-pointer">
                 <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
                 <span className="px-4 py-2 rounded-md bg-white/10 hover:bg-white/20">Subir imagen</span>
               </label>
 
-              <button
-                onClick={openCamera}
-                className="px-4 py-2 rounded-md bg-white/10 hover:bg-white/20"
-              >
-                Tomar foto
-              </button>
+              <button onClick={openCamera} className="px-4 py-2 rounded-md bg-white/10 hover:bg-white/20">Tomar foto</button>
 
-              <button
-                onClick={handleSubmit}
-                className="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-700"
-              >
-                Enviar prompt
-              </button>
+              <button onClick={handleSubmit} className="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-700">Enviar prompt</button>
             </div>
           </div>
 
-          {/* Vista previa de imagen */}
+          {/* Vista previa de imagen seleccionada o selfie */}
           <div className="mt-4">
             {selectedFile && (
               <div>
                 <p className="mb-2">Imagen seleccionada:</p>
-                <img
-                  src={URL.createObjectURL(selectedFile)}
-                  alt="preview"
-                  className="mx-auto rounded-md max-h-48"
-                />
+                <img src={URL.createObjectURL(selectedFile)} alt="preview" className="mx-auto rounded-md max-h-48" />
               </div>
             )}
 
             {capturedBlob && (
               <div>
                 <p className="mb-2">Selfie capturada:</p>
-                <img
-                  src={URL.createObjectURL(capturedBlob)}
-                  alt="selfie"
-                  className="mx-auto rounded-md max-h-48"
-                />
+                <img src={URL.createObjectURL(capturedBlob)} alt="selfie" className="mx-auto rounded-md max-h-48" />
               </div>
-            )}
+
+              <div className="text-xs text-gray-400">Tip: Usa el micrófono para dictar el prompt. El botón se pondrá rojo cuando esté escuchando.</div>
+            </aside>
           </div>
+
         </div>
 
-        {/* Modal de cámara */}
+        {/* Modal / zona de cámara (simple) */}
         {cameraActive && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4">
             <div className="bg-white rounded-lg p-4 text-black max-w-xl w-full">
@@ -223,24 +210,8 @@ export default function App() {
               <video ref={videoRef} autoPlay playsInline className="w-full rounded-md bg-black" />
 
               <div className="mt-3 flex gap-3 justify-end">
-                <button
-                  onClick={() => {
-                    setCameraActive(false)
-                    if (streamRef.current) {
-                      streamRef.current.getTracks().forEach((t) => t.stop())
-                      streamRef.current = null
-                    }
-                  }}
-                  className="px-3 py-2 rounded-md bg-gray-200"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={capturePhoto}
-                  className="px-3 py-2 rounded-md bg-blue-600 text-white"
-                >
-                  Capturar
-                </button>
+                <button onClick={() => { setCameraActive(false); if (streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null; } }} className="px-3 py-2 rounded-md bg-gray-200">Cancelar</button>
+                <button onClick={capturePhoto} className="px-3 py-2 rounded-md bg-blue-600 text-white">Capturar</button>
               </div>
 
               <canvas ref={canvasRef} style={{ display: 'none' }} />

@@ -1,63 +1,79 @@
-# backend/main.py
+# main.py
 import os
 import time
 import shutil
-from google import genai 
+import base64
+import requests
+from PIL import Image
+import google.generativeai as genai
 
-# Crear carpetas temporales
+# Configura tu API Key de Gemini
+API_KEY = "AIzaSyCGgMcF0KhPfDKllrAlM6_XlggoXDpCozM"
+genai.configure(api_key=API_KEY)
+
+# Configura tu API Key para imgbb (o cualquier hosting que uses)
+IMGBB_API_KEY = "9b6a38f74e50702889c4afd2704f325f"
+IMGBB_UPLOAD_URL = "https://api.imgbb.com/1/upload"
+
+# Carpetas locales
 os.makedirs("uploads", exist_ok=True)
 os.makedirs("videos", exist_ok=True)
 
-# Leer la API key desde variable de entorno
-api_key = os.environ.get("GENAI_API_KEY")
-if not api_key:
-    raise ValueError("❌ No se encontró la API key. Define la variable GENAI_API_KEY.")
+def subir_a_imgbb(ruta_imagen: str) -> str:
+    """Sube la imagen a imgbb y devuelve la URL pública."""
+    with open(ruta_imagen, "rb") as f:
+        encoded = base64.b64encode(f.read())
+    response = requests.post(
+        IMGBB_UPLOAD_URL,
+        data={
+            "key": IMGBB_API_KEY,
+            "image": encoded
+        }
+    )
+    if response.status_code != 200:
+        raise Exception(f"Error subiendo la imagen: {response.text}")
+    data = response.json()
+    return data['data']['url']
 
-client = genai.Client(api_key=api_key)
+def generar_video(prompt: str, url_imagen: str):
+    """Genera el video usando Gemini Pro Vision."""
+    model = genai.GenerativeModel("veo-3.1-generate-preview")
+    response = model.generate_content([
+        f"{prompt}",
+        url_imagen
+    ])
+    response.resolve()  # Espera a que la generación termine
+    return response.text  # Aquí Gemini puede darte el enlace o los datos del video
 
 def main():
     print("=== Generador de Video con Veo 3.1 ===\n")
-    
-    # 1. Pedir al usuario seleccionar archivo de imagen
-    image_path = input("Ingresa la ruta de la imagen (ej: C:\\Users\\Usuario\\Desktop\\foto.jpg): ").strip()
-    
+    image_path = input("Ingresa la ruta de la imagen: ").strip()
     if not os.path.isfile(image_path):
         print("❌ La imagen no existe. Verifica la ruta.")
         return
-    
-    # 2. Pedir prompt desde consola
     prompt = input("Ingresa el prompt para el video: ").strip()
-    
-    if prompt == "":
+    if not prompt:
         print("❌ El prompt no puede estar vacío.")
         return
-    
-    # 3. Copiar la imagen a carpeta temporal
-    temp_image_path = os.path.join("uploads", os.path.basename(image_path))
-    shutil.copy(image_path, temp_image_path)
-    print(f"Imagen guardada temporalmente en: {temp_image_path}")
-    
-    # 4. Llamar a Veo 3.1 (API)
-    print("Generando video con Veo 3.1, esto puede tardar unos segundos...")
-    operation = client.models.generate_videos(
-        model="veo-3.1-generate-preview",
-        prompt=prompt,
-        image=temp_image_path
-    )
-    
-    # 5. Esperar hasta que el video esté listo
-    while not operation.done:
-        print("⏳ Esperando que el video se genere...")
-        time.sleep(5)
-        operation = client.operations.get(operation)
-    
-    # 6. Descargar video
-    video = operation.response.generated_videos[0]
-    video_path = os.path.join("videos", f"{os.path.splitext(os.path.basename(image_path))[0]}_veo3.mp4")
-    client.files.download(file=video.video)
-    video.video.save(video_path)
-    
-    print(f"✅ Video generado y guardado en: {video_path}")
+
+    # Copiar imagen a carpeta temporal
+    temp_path = os.path.join("uploads", os.path.basename(image_path))
+    shutil.copy(image_path, temp_path)
+    print(f"Imagen guardada temporalmente en: {temp_path}")
+
+    # Subir la imagen a la nube
+    print("Subiendo imagen a la nube...")
+    url_imagen = subir_a_imgbb(temp_path)
+    print(f"Imagen subida correctamente: {url_imagen}")
+
+    # Generar el video
+    print("Generando video, esto puede tardar unos segundos...")
+    try:
+        resultado = generar_video(prompt, url_imagen)
+        print("✅ Video generado correctamente!")
+        print("Resultado:", resultado)
+    except Exception as e:
+        print("❌ Ocurrió un error durante la generación del video:", e)
 
 if __name__ == "__main__":
     main()
