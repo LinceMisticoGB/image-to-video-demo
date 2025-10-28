@@ -1,14 +1,20 @@
 import React, { useRef, useState, useEffect } from 'react'
+import env from './assets/env.png'
+import mic from './assets/mic.png'
+import cam from './assets/cam.png'
+
 export default function App() {
   const [prompt, setPrompt] = useState('')
   const [selectedFile, setSelectedFile] = useState(null)
   const [capturedBlob, setCapturedBlob] = useState(null)
   const [cameraActive, setCameraActive] = useState(false)
+  const [listening, setListening] = useState(false)
+  const [interimTranscript, setInterimTranscript] = useState('')
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
   const streamRef = useRef(null)
+  const recognitionRef = useRef(null)
 
-  // Iniciar cámara cuando se active el modo "tomar foto"
   useEffect(() => {
     if (!cameraActive) return
     const start = async () => {
@@ -131,81 +137,119 @@ export default function App() {
     const form = new FormData()
     form.append('prompt', prompt)
     if (selectedFile) form.append('image', selectedFile)
-    if (capturedBlob)
-      form.append('image', new File([capturedBlob], 'selfie.jpg', { type: 'image/jpeg' }))
+    if (capturedBlob) form.append('image', new File([capturedBlob], 'selfie.jpg', { type: 'image/jpeg' }))
 
-    // Ejemplo: mostrar en consola los datos que enviarías
-    console.log('Enviando prompt y archivo:', { prompt, file: selectedFile || capturedBlob })
-
-    // Simular envío
-    alert('Simulación: prompt enviado. Revisa la consola para ver el FormData.')
+    console.log('Enviar payload:', { prompt, file: selectedFile || capturedBlob })
+    alert('Simulación: prompt y archivo preparados. Revisa la consola para ver el FormData.')
   }
 
   return (
-    <div className="min-h-screen relative bg-gray-900 text-white flex items-center justify-center">
-      {/* VIDEOS DE FONDO - reemplaza src por tus archivos de video */}
-      <div className="absolute inset-0 overflow-hidden -z-10">
-        <video autoPlay loop muted playsInline className="w-full h-full object-cover opacity-40">
+    <div className="min-h-screen relative bg-gradient-to-b from-gray-900 via-black to-gray-800 text-white flex items-center justify-center px-4">
+      {/* Fondo con videos superpuesto */}
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <video autoPlay loop muted playsInline className="w-full h-full object-cover opacity-30">
           <source src="/videos/background1.mp4" type="video/mp4" />
         </video>
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
       </div>
 
-      {/* Contenedor central */}
-      <div className="w-full max-w-3xl mx-auto p-6 text-center">
-        <h1 className="text-3xl sm:text-5xl font-extrabold drop-shadow-lg">IA IMAGEN A VIDEO - DEMO</h1>
+      <div className="w-full h-full min-h-screen mx-auto p-4 lg:p-8 flex flex-col">
 
-        <p className="mt-6 text-lg">Sube una imagen o toma una una selfie para comenzar</p>
+        <header className="text-center mb-6">
+          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight drop-shadow-xl">IA IMAGEN A VIDEO - DEMO</h1>
+        </header>
 
-        <div className="mt-6 bg-white/8 backdrop-blur-md rounded-xl p-6 shadow-lg">
-          {/* Cuadro de texto para prompt */}
-          <label className="block text-left mb-2 font-medium">Prompt</label>
-          <textarea
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Describe lo que quieres que salga en el video (ej: 'estilo cinematográfico, amanecer, cámara lenta')"
-            className="w-full rounded-md p-3 text-black resize-none h-28"
-          />
+          <main className="w-full bg-white/5 backdrop-blur-md rounded-2xl p-4 lg:p-6 shadow-2xl border border-white/6">
+          <p className="text-center text-gray-300 mb-5">Sube una imagen o toma una selfie para comenzar</p>
 
-          {/* Botones para subir / tomar foto / enviar */}
-          <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex-1 flex gap-3">
-              <label className="inline-flex items-center gap-2 cursor-pointer">
-                <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
-                <span className="px-4 py-2 rounded-md bg-white/10 hover:bg-white/20">Subir imagen</span>
-              </label>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            {/* Columna izquierda: prompt + mic */}
+            <div className="col-span-2">
+              <label className="block text-sm text-gray-400 mb-3">Describe tu prompt</label>
+              <textarea
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                placeholder="Ej: 'Escena cyberpunk, cámara lenta, atardecer, correr'"
+                className="w-full rounded-lg p-4 text-black resize-none min-h-[160px]"
+              />
+              <div className="mt-3 flex items-center gap-3">
+                {/* Botón subir imagen - archivo oculto */}
+                <label className="relative inline-flex items-center justify-center cursor-pointer">
+                  <input type="file" accept="image/*" onChange={handleFileChange} className="sr-only" />
+                  <span className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-white/6 hover:bg-white/10">
+                    <img src={env} alt="Subir archivo" className="w-6 h-6" />
+                  </span>
+                </label>
 
-              <button onClick={openCamera} className="px-4 py-2 rounded-md bg-white/10 hover:bg-white/20">Tomar foto</button>
+                {/* Tomar foto - abre cámara modal */}
+                <button onClick={openCamera} className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-white/6 hover:bg-white/10">
+                  <img src={cam} alt="Abrir cámara" className="w-6 h-6" />
+                </button>
 
-              <button onClick={handleSubmit} className="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-700">Enviar prompt</button>
-            </div>
-          </div>
+                {/* Microfono - iniciar/stop */}
+                <button onClick={toggleListening} className={`w-12 h-12 inline-flex items-center justify-center rounded-full ${listening ? 'bg-red-600' : 'bg-white/6'} hover:opacity-90`} title={listening ? 'Detener escucha' : 'Usar micrófono'}>
+                  <img src={mic} alt="Micrófono" className="w-6 h-6" />
+                </button>
 
-          {/* Vista previa de imagen seleccionada o selfie */}
-          <div className="mt-4">
-            {selectedFile && (
-              <div>
-                <p className="mb-2">Imagen seleccionada:</p>
-                <img src={URL.createObjectURL(selectedFile)} alt="preview" className="mx-auto rounded-md max-h-48" />
+                {/* Enviar prompt - icono flecha */}
+                <button onClick={handleSubmit} className="ml-auto w-12 h-12 inline-flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700" title="Enviar prompt">
+                  <img src={env} alt="Enviar" className="w-6 h-6" />
+                </button>
               </div>
-            )}
 
-            
-             
+              {/* Transcripción interina */}
+              {interimTranscript && (
+                <p className="mt-2 text-sm text-yellow-300">{interimTranscript}</p>
+              )}
+            </div>
+
+            {/* Columna derecha: preview y contador/simple info */}
+            <aside className="space-y-4">
+              <div className="bg-white/6 rounded-lg p-3 text-center">
+                <p className="text-sm text-gray-300 mb-1">Previsualización</p>
+                {selectedFile && (
+                  <img src={URL.createObjectURL(selectedFile)} alt="preview" className="mx-auto rounded-md max-h-40 object-contain" />
+                )}
+                {capturedBlob && (
+                  <img src={URL.createObjectURL(capturedBlob)} alt="selfie" className="mx-auto rounded-md max-h-40 object-contain" />
+                )}
+                {!selectedFile && !capturedBlob && (
+                  <div className="text-gray-500 text-sm">No hay imagen</div>
+                )}
+              </div>
+
+              <div className="bg-white/6 rounded-lg p-3 text-center">
+                <p className="text-sm text-gray-300">Controles</p>
+                <div className="mt-2 flex gap-2 justify-center">
+                  <button onClick={() => { setPrompt(''); setSelectedFile(null); setCapturedBlob(null); }} className="px-3 py-1 rounded-md bg-white/8">Limpiar</button>
+                </div>
+              </div>
+
+              <div className="text-xs text-gray-400">Tip: Usa el micrófono para dictar el prompt. El botón se pondrá rojo cuando esté escuchando.</div>
+            </aside>
           </div>
+        </main>
 
-        </div>
-
-        {/* Modal / zona de cámara (simple) */}
+        {/* Modal de cámara simple */}
         {cameraActive && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg p-4 text-black max-w-xl w-full">
-              <h2 className="font-bold mb-2">Tomar foto</h2>
-              <video ref={videoRef} autoPlay playsInline className="w-full rounded-md bg-black" />
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg p-4 text-black max-w-2xl w-full">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="font-bold">Tomar foto</h2>
+                <div className="flex gap-2">
+                  <button onClick={() => { setCameraActive(false); if (streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null; } }} className="px-3 py-1 rounded-md bg-gray-200">Cerrar</button>
+                </div>
+              </div>
 
-              <div className="mt-3 flex gap-3 justify-end">
-                <button onClick={() => { setCameraActive(false); if (streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null; } }} className="px-3 py-2 rounded-md bg-gray-200">Cancelar</button>
-                <button onClick={capturePhoto} className="px-3 py-2 rounded-md bg-blue-600 text-white">Capturar</button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <video ref={videoRef} autoPlay playsInline className="w-full rounded-md bg-black h-64 object-cover" />
+                <div className="flex flex-col gap-3">
+                  <p className="text-sm text-gray-700">Alinea tu rostro y presiona Capturar</p>
+                  <div className="mt-auto flex gap-2">
+                    <button onClick={capturePhoto} className="flex-1 px-4 py-2 rounded-md bg-blue-600 text-white">Capturar</button>
+                    <button onClick={() => { setCameraActive(false); if (streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null; } }} className="px-4 py-2 rounded-md bg-gray-200">Cancelar</button>
+                  </div>
+                </div>
               </div>
 
               <canvas ref={canvasRef} style={{ display: 'none' }} />
