@@ -19,12 +19,14 @@ export default function App() {
   const streamRef = useRef(null)
   const recognitionRef = useRef(null)
   const [currentIndex, setCurrentIndex] = useState(0)
-  const videos = [videoplayback, pez, astron] // tres videos en el carrusel
+  const videos = [videoplayback, pez, astron]
 
+
+  //efecto carrsuel para los videos
 useEffect(() => {
   const interval = setInterval(() => {
     setCurrentIndex((prev) => (prev + 1) % videos.length)
-  }, 6000) // cambia cada 6 segundos
+  }, 6000)
   return () => clearInterval(interval)
 }, [videos.length])
 
@@ -112,7 +114,7 @@ useEffect(() => {
     }
 
     rec.onerror = (e) => {
-      console.error('Speech recognition error', e)
+      console.error('error', e)
     }
 
     recognitionRef.current = rec
@@ -157,28 +159,19 @@ useEffect(() => {
   }
 
   return (
-    <div className="min-h-screen relative bg-gradient-to-b from-gray-900 via-black to-gray-800 text-white flex items-center justify-center px-4">
-      {/* Fondo con videos superpuesto */}
-      <div className="absolute inset-0 -z-10 overflow-hidden">
-        <video autoPlay loop muted playsInline className="w-full h-full object-cover opacity-30">
-          <source src=".\assets\VideosFondo\pez.mp4" type="video/mp4" />
-        </video>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-      </div>
+    <div className="min-h-screen relative bg-gradient-to-b from-gray-900 via-black to-gray-800 text-white flex items-center justify-center px-8">
+     <div className="w-full h-full min-h-screen mx-auto p-4 lg:p-4 flex flex-col">
 
-      <div className="w-full h-full min-h-screen mx-auto p-4 lg:p-8 flex flex-col">
+        <header className="text-center mb-2">
+          <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight drop-shadow-xl">
+            IA IMAGEN A VIDEO - DEMO
+          </h1>
+        </header>
 
-<header className="text-center mb-6">
-  <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight drop-shadow-xl">
-    IA IMAGEN A VIDEO - DEMO
-  </h1>
-</header>
-
-{/* 🎞️ Carrusel decorativo de videos */}
+    {/*Carrusel videos */}
 <section className="relative flex justify-center mb-8 px-4 z-10">
-  <div className="w-full max-w-3xl rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-black/40">
+  <div className="w-full max-w-3xl rounded-2xl overflow-hidden shadow-2xl border border-white/58 bg-black/80">
     <div className="relative w-full h-[100px] md:h-[200px] overflow-hidden rounded-2xl">
-      {/** Contenedor de videos */}
       <div
         className="flex transition-transform duration-[1500ms] ease-in-out"
         style={{ transform: `translateX(-${currentIndex * 100}%)` }}
@@ -198,9 +191,6 @@ useEffect(() => {
     </div>
   </div>
 </section>
-
-
-
 
           <main className="w-full bg-white/5 backdrop-blur-md rounded-2xl p-4 lg:p-6 shadow-2xl border border-white/6">
           <p className="text-center text-gray-300 mb-5">Sube una imagen o toma una selfie para comenzar</p>
