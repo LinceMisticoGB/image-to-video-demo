@@ -155,7 +155,7 @@ const handleSubmit = async () => {
     if (capturedBlob) {
       form.append('image', new File([capturedBlob], 'selfie.jpg', { type: 'image/jpeg' }))
     } else if (selectedFile) {
-      form.append('image', selectedFile)
+      form.append('file', selectedFile) //aqui hubo cambios
     } else {
       alert("Debes subir o tomar una foto antes de enviar.")
       return
